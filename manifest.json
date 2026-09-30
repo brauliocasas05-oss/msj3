@@ -1,9 +1,0 @@
-{
-  "name":"Mensajería MX",
-  "short_name":"Mensajería MX",
-  "start_url":"./",
-  "display":"standalone",
-  "background_color":"#eef0f6",
-  "theme_color":"#6757d9",
-  "orientation":"portrait"
-}
