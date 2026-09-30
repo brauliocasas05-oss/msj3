@@ -1,0 +1,72 @@
+MENSAJERÍA MX - PC + IPHONE
+
+IMPORTANTE
+La versión anterior abría la URL de GitHub, y si GitHub todavía tenía
+el index.html viejo, aparecía Flappy Bird. Esta versión separa el acceso.
+
+========================
+1. SUPABASE
+========================
+
+Ejecuta TODO:
+supabase_mensajeria_imagenes.sql
+
+en:
+Supabase -> SQL Editor -> Run
+
+Y confirma:
+Authentication -> Sign In / Providers
+-> Allow anonymous sign-ins = ON
+
+========================
+2. COMPUTADORA
+========================
+
+No necesitas GitHub para probar la PC.
+
+Pon estos archivos juntos:
+- MensajeriaMX_PC.html
+- Abrir_Mensajeria_PC.bat
+
+Después haz doble clic en:
+Abrir_Mensajeria_PC.bat
+
+Eso abre directamente la mensajería.
+
+========================
+3. IPHONE
+========================
+
+Para iPhone usa GitHub Pages.
+
+En tu repositorio FlappyBirdMX3 reemplaza:
+- index.html
+- manifest.json
+- sw.js
+
+Luego abre en Safari:
+
+https://brauliocasas05-oss.github.io/FlappyBirdMX3/
+
+Después:
+Compartir -> Añadir a pantalla de inicio
+
+========================
+4. PRUEBA
+========================
+
+PC:
+Usuario: PC
+
+iPhone:
+Usuario: IPHONE
+
+Desde PC manda un mensaje.
+Debe aparecer en el iPhone.
+
+Pulsa 📷 para mandar una imagen.
+
+Pulsa BORRAR TODO para borrar toda la conversación para todos.
+
+NOTA:
+El archivo SQL NO se sube a GitHub.

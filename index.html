@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Mensajería MX</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#6757d9">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mensajería MX">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;font-family:Arial,sans-serif}
+body{background:#eef0f6;color:#202330;overflow:hidden}
+button,input,textarea{font:inherit}
+#login{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,#6757d9,#4b8bf5)}
+.card{width:100%;max-width:380px;background:#fff;border-radius:20px;padding:28px;box-shadow:0 18px 50px #0003;text-align:center}
+.logo{width:68px;height:68px;border-radius:18px;background:#6757d9;color:#fff;display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 14px}.card h1{margin:0 0 8px;font-size:28px}.card p{color:#666;font-size:14px;line-height:1.45}
+#nombre{width:100%;padding:14px;border:2px solid #ddd;border-radius:10px;text-align:center;outline:0;margin:8px 0}#nombre:focus{border-color:#6757d9}
+#entrar{width:100%;padding:14px;border:0;border-radius:10px;background:#6757d9;color:#fff;font-weight:bold;cursor:pointer}#entrar:disabled{opacity:.6}
+#estado{min-height:22px;margin-top:10px;font-size:13px;color:#c00;word-break:break-word}
+#app{height:100%;display:none;flex-direction:column;background:#fff}
+header{height:70px;flex:0 0 70px;background:#fff;border-bottom:1px solid #ddd;display:flex;align-items:center;justify-content:space-between;padding:8px 12px;gap:8px}
+.user{display:flex;align-items:center;gap:9px;min-width:0}.mini{width:40px;height:40px;border-radius:12px;background:#6757d9;color:#fff;display:flex;align-items:center;justify-content:center;flex:0 0 auto}.info{min-width:0}
+#nombreActivo{font-weight:bold;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#conexion{font-size:11px;color:#198754;margin-top:2px}
+.acciones{display:flex;gap:6px;flex:0 0 auto}.acciones button{padding:8px 9px;border:1px solid #ddd;border-radius:8px;background:#f7f7fa;font-size:10px;font-weight:bold;cursor:pointer}#btnBorrar{color:#c62828;background:#fff5f5;border-color:#f3caca}
+#mensajes{flex:1;min-height:0;overflow-y:auto;padding:12px;background:#f3f4f8}.vacio{text-align:center;color:#888;margin-top:45px;font-size:14px;line-height:1.5}
+.fila{display:flex;margin:0 0 8px}.fila.mio{justify-content:flex-end}.fila.otro{justify-content:flex-start}.burbuja{max-width:min(84%,560px);padding:9px 11px;border-radius:15px;overflow-wrap:anywhere;box-shadow:0 2px 6px #0000000d}.mio .burbuja{background:#6757d9;color:#fff;border-bottom-right-radius:4px}.otro .burbuja{background:#fff;border-bottom-left-radius:4px}
+.remitente{font-size:10px;font-weight:bold;opacity:.75;margin-bottom:4px}.cuerpo{font-size:15px;white-space:pre-wrap;line-height:1.35}.hora{font-size:9px;opacity:.6;text-align:right;margin-top:5px}
+.imagenMensaje{display:block;max-width:100%;max-height:360px;border-radius:10px;margin-bottom:6px;cursor:pointer}.mio .imagenMensaje{background:#fff3}
+#escribir{background:#fff;border-top:1px solid #ddd;padding:9px;padding-bottom:max(9px,env(safe-area-inset-bottom))}.form{width:100%;max-width:1000px;margin:auto;display:flex;align-items:flex-end;gap:7px}
+#archivo{display:none}#btnImagen{width:46px;height:46px;border:1px solid #ddd;border-radius:50%;background:#f8f8fb;cursor:pointer;flex:0 0 46px;font-size:20px}#texto{flex:1;min-width:0;resize:none;max-height:120px;border:2px solid #ddd;border-radius:16px;padding:10px 12px;outline:0}#texto:focus{border-color:#6757d9}#enviar{width:46px;height:46px;border:0;border-radius:50%;background:#6757d9;color:#fff;font-size:20px;cursor:pointer;flex:0 0 46px}
+#enviar:disabled,#btnImagen:disabled{opacity:.5;cursor:wait}
+#vistaArchivo{display:none;position:absolute;left:9px;right:9px;bottom:70px;background:#fff;border:1px solid #ddd;border-radius:12px;padding:8px;z-index:20;box-shadow:0 6px 20px #0002}#vistaArchivo img{max-width:80px;max-height:80px;border-radius:8px;vertical-align:middle;margin-right:8px}#quitarArchivo{float:right;border:0;background:transparent;font-size:20px;cursor:pointer}
+@media(max-width:600px){header{height:64px;flex-basis:64px;padding:7px}.mini{width:36px;height:36px}.acciones button{padding:7px 7px;font-size:9px}.burbuja{max-width:88%}#mensajes{padding:9px 8px}#texto{font-size:16px}.imagenMensaje{max-height:280px}}
+</style>
+</head>
+<body>
+<div id="login"><div class="card"><div class="logo">💬</div><h1>Mensajería MX</h1><p>Escribe tu nombre para entrar. No necesitas correo ni contraseña.</p><input id="nombre" maxlength="20" autocomplete="off" placeholder="Ej. Braulio"><button id="entrar">ENTRAR AL CHAT</button><div id="estado"></div></div></div>
+<div id="app">
+<header><div class="user"><div class="mini">💬</div><div class="info"><div id="nombreActivo">Usuario</div><div id="conexion">● Conectando...</div></div></div><div class="acciones"><button id="btnBorrar" type="button">BORRAR TODO</button><button id="btnCambiar" type="button">SALIR</button></div></header>
+<main id="mensajes"><div class="vacio">Cargando mensajes...</div></main>
+<div id="escribir"><form id="formulario" class="form"><input id="archivo" type="file" accept="image/*"><button id="btnImagen" type="button" title="Enviar imagen">📷</button><textarea id="texto" rows="1" maxlength="1000" placeholder="Escribe un mensaje..."></textarea><button id="enviar" type="submit" title="Enviar">➤</button></form></div>
+<div id="vistaArchivo"><button id="quitarArchivo" type="button">×</button><img id="preview" alt="Vista previa"><span id="nombreArchivo"></span></div>
+</div>
+<script>
+const SUPABASE_URL="https://anrdwzwtjnmjqmpbxzxa.supabase.co";
+const SUPABASE_KEY="sb_publishable_Nshraofg9n-Tc6zl8Resxw_vVnVPyct";
+const supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const login=document.getElementById("login"),app=document.getElementById("app"),nombre=document.getElementById("nombre"),entrar=document.getElementById("entrar"),estado=document.getElementById("estado"),nombreActivo=document.getElementById("nombreActivo"),conexion=document.getElementById("conexion"),mensajes=document.getElementById("mensajes"),texto=document.getElementById("texto"),enviar=document.getElementById("enviar"),archivo=document.getElementById("archivo"),btnImagen=document.getElementById("btnImagen"),vistaArchivo=document.getElementById("vistaArchivo"),preview=document.getElementById("preview"),nombreArchivo=document.getElementById("nombreArchivo");
+let user=null,perfil=null,channel=null,archivoSeleccionado=null,recarga=null;
+function err(x){estado.textContent=x;estado.style.color="#c00"}
+function clean(x){return x.trim().replace(/\s+/g,"_").replace(/[^a-zA-Z0-9_-]/g,"")}
+function esc(x){return String(x).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
+function hora(x){return new Date(x).toLocaleTimeString("es-MX",{hour:"2-digit",minute:"2-digit"})}
+function abajo(){requestAnimationFrame(()=>mensajes.scrollTop=mensajes.scrollHeight)}
+async function entrarChat(){
+ const n=clean(nombre.value); if(n.length<2){err("Escribe al menos 2 caracteres.");return}
+ entrar.disabled=true;estado.textContent="Conectando...";estado.style.color="#555";
+ try{
+  const {data:sd,error:se}=await supabase.auth.getSession(); if(se)throw se;
+  if(sd.session?.user?.is_anonymous){user=sd.session.user}else{if(sd.session)await supabase.auth.signOut({scope:"local"});const {data,error}=await supabase.auth.signInAnonymously({options:{data:{username:n}}});if(error)throw error;user=data.user}
+  const {data:p,error:pe}=await supabase.from("chat_profiles").select("user_id,username").eq("user_id",user.id).maybeSingle();if(pe)throw pe;
+  if(!p){const {data:created,error:ce}=await supabase.from("chat_profiles").insert({user_id:user.id,username:n}).select("user_id,username").single();if(ce)throw ce;perfil=created}else{perfil=p}
+  nombreActivo.textContent="👤 "+perfil.username;localStorage.setItem("mensajeria_nombre",perfil.username);login.style.display="none";app.style.display="flex";await cargarMensajes();iniciarRealtime();texto.focus();
+ }catch(e){console.error(e);err("ERROR: "+(e?.message||"No se pudo entrar"))}finally{entrar.disabled=false}
+}
+async function cargarMensajes(){
+ const {data,error}=await supabase.from("chat_messages").select("id,user_id,username,body,image_url,created_at").order("created_at",{ascending:true}).limit(300);
+ if(error){mensajes.innerHTML='<div class="vacio">Error cargando mensajes.<br>'+esc(error.message)+'</div>';return}
+ mensajes.innerHTML="";if(!data?.length){mensajes.innerHTML='<div class="vacio">No hay mensajes todavía.<br>Escribe algo o manda una imagen.</div>';return}data.forEach(addMessage);abajo();
+}
+function addMessage(m){
+ if(document.querySelector('[data-id="'+m.id+'"]'))return;const row=document.createElement("div"),mine=m.user_id===user?.id;row.className="fila "+(mine?"mio":"otro");row.dataset.id=m.id;let c="";
+ if(m.image_url)c+='<a href="'+esc(m.image_url)+'" target="_blank" rel="noopener"><img class="imagenMensaje" src="'+esc(m.image_url)+'" alt="Imagen enviada"></a>';
+ if(m.body)c+='<div class="cuerpo">'+esc(m.body)+'</div>';
+ row.innerHTML='<div class="burbuja">'+(mine?"":'<div class="remitente">'+esc(m.username)+'</div>')+c+'<div class="hora">'+hora(m.created_at)+'</div></div>';
+ mensajes.querySelector(".vacio")?.remove();mensajes.appendChild(row);abajo();
+}
+function programarRecarga(){clearTimeout(recarga);recarga=setTimeout(cargarMensajes,250)}
+async function subirImagen(file){
+ if(!file.type.startsWith("image/"))throw new Error("Solo puedes enviar imágenes.");
+ if(file.size>10*1024*1024)throw new Error("La imagen no puede superar 10 MB.");
+ const ext=(file.name.split(".").pop()||"jpg").toLowerCase().replace(/[^a-z0-9]/g,"");
+ const path=user.id+"/"+Date.now()+"-"+Math.random().toString(36).slice(2,9)+"."+ext;
+ const {data,error}=await supabase.storage.from("chat-images").upload(path,file,{cacheControl:"3600",upsert:false,contentType:file.type});
+ if(error)throw error;const {data:u}=supabase.storage.from("chat-images").getPublicUrl(data.path);return u.publicUrl;
+}
+async function enviarMensaje(){
+ const body=texto.value.trim();if(!body&&!archivoSeleccionado)return;enviar.disabled=true;btnImagen.disabled=true;
+ try{let imageUrl=null;if(archivoSeleccionado){conexion.textContent="● Subiendo imagen...";imageUrl=await subirImagen(archivoSeleccionado)}const {data,error}=await supabase.rpc("enviar_mensaje",{p_body:body||null,p_image_url:imageUrl});if(error)throw error;if(data)addMessage(data);texto.value="";texto.style.height="auto";limpiarArchivo();conexion.textContent="● En línea";conexion.style.color="#198754";texto.focus()}catch(e){console.error(e);alert("No se pudo enviar: "+(e?.message||"Error"))}finally{enviar.disabled=false;btnImagen.disabled=false}
+}
+function iniciarRealtime(){
+ if(channel)supabase.removeChannel(channel);
+ channel=supabase.channel("chat-general").on("postgres_changes",{event:"*",schema:"public",table:"chat_messages"},p=>{if(p.eventType==="INSERT")addMessage(p.new);else if(p.eventType==="DELETE")programarRecarga()}).subscribe(status=>{if(status==="SUBSCRIBED"){conexion.textContent="● En línea";conexion.style.color="#198754"}else if(status==="CHANNEL_ERROR"){conexion.textContent="● Error de conexión";conexion.style.color="#c00"}});
+}
+function limpiarArchivo(){archivoSeleccionado=null;archivo.value="";preview.removeAttribute("src");nombreArchivo.textContent="";vistaArchivo.style.display="none"}
+btnImagen.addEventListener("click",()=>archivo.click());archivo.addEventListener("change",()=>{const f=archivo.files?.[0];if(!f){limpiarArchivo();return}archivoSeleccionado=f;preview.src=URL.createObjectURL(f);nombreArchivo.textContent=f.name;vistaArchivo.style.display="block"});document.getElementById("quitarArchivo").addEventListener("click",limpiarArchivo);
+document.getElementById("formulario").addEventListener("submit",e=>{e.preventDefault();enviarMensaje()});texto.addEventListener("input",()=>{texto.style.height="auto";texto.style.height=Math.min(texto.scrollHeight,120)+"px"});texto.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();enviarMensaje()}});
+document.getElementById("btnBorrar").addEventListener("click",async()=>{if(!confirm("¿Seguro que quieres BORRAR TODA LA CONVERSACIÓN? Se borrarán los mensajes para todos."))return;const {error}=await supabase.rpc("borrar_conversacion");if(error){alert("No se pudo borrar: "+error.message);return}mensajes.innerHTML='<div class="vacio">Conversación limpiada.</div>'});
+document.getElementById("btnCambiar").addEventListener("click",async()=>{if(!confirm("¿Salir y cambiar de usuario?"))return;if(channel){await supabase.removeChannel(channel);channel=null}await supabase.auth.signOut({scope:"local"});user=null;perfil=null;app.style.display="none";login.style.display="flex";nombre.value="";estado.textContent="";nombre.focus()});
+nombre.addEventListener("keydown",e=>{if(e.key==="Enter")entrarChat()});
+async function comprobarSesion(){const {data}=await supabase.auth.getSession();if(data.session?.user?.is_anonymous){user=data.session.user;const {data:p}=await supabase.from("chat_profiles").select("user_id,username").eq("user_id",user.id).maybeSingle();if(p){perfil=p;nombreActivo.textContent="👤 "+perfil.username;login.style.display="none";app.style.display="flex";await cargarMensajes();iniciarRealtime();return}}const s=localStorage.getItem("mensajeria_nombre");if(s)nombre.value=s;nombre.focus()}
+if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(console.error));
+comprobarSesion();
+</script>
+</body>
+</html>
